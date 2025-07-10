@@ -1,3 +1,5 @@
+# Complete Docker Guide: From Basics to Advanced
+
 ## Evolution of Application Deployment
 
 ### 1. Physical Servers
@@ -34,7 +36,7 @@
     - **OS-Agnostic:** Containers abstract away OS differences, simplifying cross-platform development.
 - **Industry Impact:**  
     - **Origins:** Google pioneered container technologies (cgroups, namespaces) to efficiently run massive workloads.
-    - **Docker’s Role:** Docker introduced a user-friendly interface and ecosystem, making containers accessible to developers and accelerating adoption across the industry.
+    - **Docker's Role:** Docker introduced a user-friendly interface and ecosystem, making containers accessible to developers and accelerating adoption across the industry.
     - **Ecosystem Growth:** The container ecosystem now includes registries (Docker Hub), orchestration (Kubernetes), and tooling for CI/CD, security, and monitoring.
 
 ---
@@ -57,6 +59,17 @@ Virtual Machines:                Containers:
 +---------------------+          +---------------------+
 ```
 
+### Resource Comparison
+
+| Aspect | Virtual Machines | Containers |
+|--------|------------------|------------|
+| **Boot Time** | Minutes | Seconds |
+| **Resource Usage** | High (full OS) | Low (shared kernel) |
+| **Isolation** | Strong (hardware-level) | Process-level |
+| **Portability** | Limited (OS-dependent) | High (consistent environment) |
+| **Density** | 10-20 per host | 100-1000 per host |
+| **Use Case** | Legacy apps, different OSes | Microservices, cloud-native |
+
 - **Virtual Machines:**  
     - Each VM includes its own OS and kernel, providing strong isolation but at the cost of higher resource usage.
     - VMs are managed by a hypervisor (e.g., VMware ESXi, Microsoft Hyper-V, KVM) that allocates hardware resources and enables multiple OS instances to run on shared hardware.
@@ -70,7 +83,7 @@ Virtual Machines:                Containers:
     - **Use Cases:** Microservices, stateless applications, rapid scaling, CI/CD pipelines.
 
 ### Practical Example
-If you want to share your website with a friend, just sending the code may cause dependency issues (e.g., missing libraries, incompatible OS). By sharing a Dockerfile or container image, your friend can build or run the app in a container, ensuring all dependencies are included and the environment is consistent—solving the “works on my machine” problem.
+If you want to share your website with a friend, just sending the code may cause dependency issues (e.g., missing libraries, incompatible OS). By sharing a Dockerfile or container image, your friend can build or run the app in a container, ensuring all dependencies are included and the environment is consistent—solving the "works on my machine" problem.
 - **Dockerfile:** Defines the environment and steps to build the image.
 - **Image:** Packaged application and dependencies.
 - **Container:** Running instance of the image.
@@ -124,6 +137,36 @@ Docker enables running applications in isolated containers. On Windows, Docker D
 +-----------------------------+
 ```
 
+### Component Breakdown
+
+#### Docker Client
+- **CLI Interface:** Command-line tool for interacting with Docker
+- **REST API:** Programmatic interface for automation and integrations
+- **Docker Compose:** Tool for defining multi-container applications
+- **Docker Desktop:** GUI application for managing Docker on desktop systems
+
+#### Docker Daemon (dockerd)
+- **Core Service:** Background service that manages Docker objects
+- **Image Management:** Pulls, builds, and stores container images
+- **Container Lifecycle:** Creates, starts, stops, and removes containers
+- **Network Management:** Creates and manages container networks
+- **Volume Management:** Handles persistent data storage
+- **Security:** Manages container isolation and access controls
+
+#### containerd
+- **Container Runtime:** Industry-standard container runtime
+- **Image Distribution:** Handles image pulling and pushing
+- **Snapshot Management:** Manages container filesystems
+- **Network Plugins:** Supports various networking solutions
+- **Storage Plugins:** Supports different storage backends
+
+#### runc
+- **OCI Runtime:** Reference implementation of OCI runtime specification
+- **Container Creation:** Creates containers using Linux kernel features
+- **Resource Management:** Applies cgroups for resource limits
+- **Namespace Isolation:** Provides process and network isolation
+- **Security:** Implements security policies and restrictions
+
 ### How Docker Works
 
 1. **User Interaction:**  
@@ -175,13 +218,331 @@ User (CLI/API)
 +-------------------+
 ```
 
-- **Images:** Stored in local or remote registries (e.g., Docker Hub, private registries).
-- **Networking:** Docker provides virtual networks for container communication.
-- **Volumes:** Persistent storage for data that outlives containers.
+### Linux Kernel Features Used by Docker
+
+#### Namespaces
+- **PID Namespace:** Process isolation - each container sees its own process tree
+- **Network Namespace:** Network isolation - separate network stack per container
+- **Mount Namespace:** Filesystem isolation - separate mount points
+- **UTS Namespace:** Hostname isolation - separate hostname and domain name
+- **IPC Namespace:** Inter-process communication isolation
+- **User Namespace:** User ID isolation - map container users to host users
+
+#### Control Groups (cgroups)
+- **CPU Limits:** Restrict CPU usage per container
+- **Memory Limits:** Set memory usage boundaries
+- **I/O Limits:** Control disk read/write operations
+- **Network Bandwidth:** Limit network usage
+- **Device Access:** Control access to devices
+
+#### Union Filesystems
+- **OverlayFS:** Efficient layered filesystem for images
+- **AUFS:** Alternative union filesystem
+- **Device Mapper:** Block-level storage driver
+- **Btrfs:** Copy-on-write filesystem with snapshotting
 
 ---
 
-## Orchestration
+## Docker Networking
+
+### Network Types
+
+#### Bridge Network (Default)
+- **Isolated Network:** Containers on the same bridge can communicate
+- **Port Mapping:** Expose container ports to host
+- **DNS Resolution:** Automatic service discovery within network
+- **Use Case:** Single-host applications, development environments
+
+#### Host Network
+- **Shared Network:** Container uses host's network stack directly
+- **Performance:** No network overhead, maximum performance
+- **Port Conflicts:** Container ports directly bind to host ports
+- **Use Case:** High-performance applications, network monitoring tools
+
+#### None Network
+- **No Network:** Container has no network access
+- **Security:** Complete network isolation
+- **Use Case:** Batch processing, security-sensitive applications
+
+#### Custom Networks
+- **User-Defined:** Create custom bridge networks
+- **Advanced Features:** Custom IP ranges, DNS, isolation
+- **Multi-Host:** Connect containers across multiple hosts
+- **Use Case:** Complex applications, microservices
+
+### Network Commands
+
+```bash
+# List networks
+docker network ls
+
+# Create custom network
+docker network create mynetwork
+
+# Connect container to network
+docker network connect mynetwork mycontainer
+
+# Inspect network details
+docker network inspect mynetwork
+
+# Remove network
+docker network rm mynetwork
+```
+
+---
+
+## Docker Storage
+
+### Volume Types
+
+#### Named Volumes
+- **Managed by Docker:** Docker handles storage location and lifecycle
+- **Persistent:** Data survives container deletion
+- **Shared:** Multiple containers can share the same volume
+- **Backup-Friendly:** Easy to backup and restore
+
+```bash
+# Create named volume
+docker volume create myvolume
+
+# Use named volume
+docker run -v myvolume:/data myapp
+```
+
+#### Bind Mounts
+- **Host Path:** Mount specific host directory or file
+- **Development:** Ideal for development workflows
+- **Direct Access:** Host can directly access and modify files
+- **Path Dependency:** Requires specific host path structure
+
+```bash
+# Bind mount host directory
+docker run -v /host/path:/container/path myapp
+
+# Bind mount current directory
+docker run -v $(pwd):/app myapp
+```
+
+#### tmpfs Mounts
+- **Memory Storage:** Store data in host memory
+- **Temporary:** Data is lost when container stops
+- **Performance:** Very fast read/write operations
+- **Security:** No data persistence on disk
+
+```bash
+# Create tmpfs mount
+docker run --tmpfs /tmp myapp
+```
+
+### Storage Drivers
+
+#### OverlayFS
+- **Default Driver:** Most commonly used storage driver
+- **Efficient:** Good performance for read/write operations
+- **Layered:** Supports Docker's layered image system
+- **Requirements:** Requires modern Linux kernel
+
+#### Device Mapper
+- **Block-Level:** Operates at block device level
+- **Snapshots:** Efficient copy-on-write snapshots
+- **Enterprise:** Often used in enterprise environments
+- **Configuration:** Requires specific storage configuration
+
+---
+
+## Docker Image Layers and Optimization
+
+### Understanding Image Layers
+
+Docker images are built in layers, with each instruction in a Dockerfile creating a new, immutable layer on top of the previous one.
+
+```
+Image Layer Structure:
++------------------------+
+|  Layer 4: App Files    |  <-- COPY . .
++------------------------+
+|  Layer 3: Dependencies |  <-- RUN pip install
++------------------------+
+|  Layer 2: Requirements |  <-- COPY requirements.txt
++------------------------+
+|  Layer 1: Base Image   |  <-- FROM python:3.11
++------------------------+
+```
+
+### Layer Caching Strategy
+
+Docker caches layers to speed up builds. Understanding this helps optimize Dockerfiles:
+
+```dockerfile
+# Inefficient - cache busted on every code change
+FROM python:3.11
+COPY . .
+RUN pip install -r requirements.txt
+CMD ["python", "app.py"]
+
+# Efficient - dependencies cached separately
+FROM python:3.11
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["python", "app.py"]
+```
+
+### Multi-Stage Builds
+
+Build applications in multiple stages to reduce final image size:
+
+```dockerfile
+# Build stage
+FROM node:16 AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Runtime stage
+FROM node:16-alpine
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY . .
+CMD ["node", "index.js"]
+```
+
+### Image Optimization Best Practices
+
+#### Use Appropriate Base Images
+- **Alpine Linux:** Minimal size (~5MB) for production
+- **Distroless:** Google's minimal images with only runtime dependencies
+- **Scratch:** Empty image for static binaries
+
+#### Minimize Layers
+```dockerfile
+# Multiple layers
+RUN apt-get update
+RUN apt-get install -y curl
+RUN apt-get clean
+
+# Single layer
+RUN apt-get update && \
+    apt-get install -y curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+```
+
+#### Use .dockerignore
+Create a `.dockerignore` file to exclude unnecessary files:
+
+```
+.git
+node_modules
+*.log
+.env
+README.md
+```
+
+---
+
+## Docker Compose
+
+### What is Docker Compose?
+
+Docker Compose is a tool for defining and running multi-container Docker applications. It uses a YAML file to configure application services.
+
+### Basic docker-compose.yml Structure
+
+```yaml
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/myapp
+    volumes:
+      - .:/app
+  
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=myapp
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    driver: bridge
+```
+
+### Common Docker Compose Commands
+
+```bash
+# Start all services
+docker-compose up
+
+# Start in background
+docker-compose up -d
+
+# Stop all services
+docker-compose down
+
+# Build and start
+docker-compose up --build
+
+# View logs
+docker-compose logs
+
+# Scale services
+docker-compose up --scale web=3
+
+# Execute command in service
+docker-compose exec web bash
+```
+
+### Environment Variables
+
+```yaml
+# Using environment file
+services:
+  web:
+    env_file:
+      - .env
+    environment:
+      - DEBUG=true
+      - DATABASE_URL=${DATABASE_URL}
+```
+
+### Health Checks
+
+```yaml
+services:
+  web:
+    image: nginx
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+```
+
+---
+
+## Container Orchestration
+
+### Why Orchestration?
 
 Managing many containers requires orchestration tools like Docker Swarm or Kubernetes.
 
@@ -191,17 +552,688 @@ Managing many containers requires orchestration tools like Docker Swarm or Kuber
     - **Zero-Downtime Updates:** Rolling updates and rollbacks ensure continuous availability during deployments.
     - **Dynamic Scaling:** Containers are added or removed based on demand (horizontal scaling).
     - **Service Discovery:** Containers can find and communicate with each other automatically.
-    - **Networking and Storage Management:** Orchestrators manage complex networking, persistent storage, and secrets.
+    - **Load Balancing:** Distribute traffic across multiple container instances.
+    - **Secrets Management:** Securely manage sensitive data like passwords and API keys.
+    - **Configuration Management:** Manage application configuration across environments.
 
-**Example:**  
-When running hundreds or thousands of containers across multiple servers (nodes), orchestrators handle:
-- Scheduling containers based on resource availability.
-- Monitoring health and restarting failed containers.
-- Rolling out updates with minimal disruption.
-- Managing secrets, configs, and persistent storage.
+### Docker Swarm
 
-- **Kubernetes:** The most widely used container orchestrator, supporting advanced features like auto-scaling, service meshes, and multi-cloud deployments.
-- **Docker Swarm:** Simpler built-in orchestrator for Docker, suitable for smaller clusters.
+Docker Swarm is Docker's native clustering and orchestration solution.
+
+#### Initialize Swarm
+```bash
+# Initialize swarm on manager node
+docker swarm init
+
+# Join worker nodes
+docker swarm join --token <token> <manager-ip>:2377
+
+# Deploy stack
+docker stack deploy -c docker-compose.yml myapp
+```
+
+#### Service Management
+```bash
+# Create service
+docker service create --name web --replicas 3 nginx
+
+# Scale service
+docker service scale web=5
+
+# Update service
+docker service update --image nginx:latest web
+
+# Remove service
+docker service rm web
+```
+
+### Kubernetes Basics
+
+Kubernetes is the most widely used container orchestrator, supporting advanced features like auto-scaling, service meshes, and multi-cloud deployments.
+
+#### Key Concepts
+- **Pods:** Smallest deployable units containing one or more containers
+- **Services:** Expose applications and provide load balancing
+- **Deployments:** Manage application lifecycle and updates
+- **ConfigMaps:** Store configuration data
+- **Secrets:** Store sensitive information
+- **Namespaces:** Isolate resources within clusters
+
+#### Basic Kubernetes Manifest
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+```
+
+---
+
+## Docker Security Best Practices
+
+### Image Security
+
+#### Use Official Base Images
+- **Trusted Sources:** Use official images from Docker Hub
+- **Minimal Images:** Prefer Alpine or distroless images
+- **Regular Updates:** Keep base images updated
+- **Image Scanning:** Use tools like Trivy, Clair, or Docker Scout
+
+#### Non-Root User
+```dockerfile
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
+# Switch to non-root user
+USER nextjs
+```
+
+### Runtime Security
+
+#### Resource Limits
+```bash
+# CPU and memory limits
+docker run --cpus="0.5" --memory="512m" myapp
+
+# In docker-compose.yml
+services:
+  web:
+    image: myapp
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+```
+
+#### Read-Only Filesystem
+```bash
+# Make root filesystem read-only
+docker run --read-only myapp
+```
+
+#### Security Options
+```bash
+# Drop capabilities
+docker run --cap-drop=ALL --cap-add=NET_BIND_SERVICE myapp
+
+# Use security profiles
+docker run --security-opt seccomp=default.json myapp
+```
+
+### Network Security
+
+#### Custom Networks
+```bash
+# Create isolated network
+docker network create --driver bridge isolated-network
+
+# Run containers on isolated network
+docker run --network isolated-network myapp
+```
+
+#### Secrets Management
+```bash
+# Docker Swarm secrets
+echo "mysecret" | docker secret create db_password -
+
+# Use secret in service
+docker service create --secret db_password myapp
+```
+
+---
+
+## Monitoring and Logging
+
+### Container Monitoring
+
+#### Built-in Monitoring
+```bash
+# View container stats
+docker stats
+
+# Monitor specific container
+docker stats mycontainer
+
+# View resource usage
+docker system df
+
+# System-wide information
+docker system info
+```
+
+#### Health Checks
+```dockerfile
+# Dockerfile health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost/ || exit 1
+```
+
+### Logging
+
+#### Log Drivers
+```bash
+# JSON file logging (default)
+docker run --log-driver json-file myapp
+
+# Syslog logging
+docker run --log-driver syslog myapp
+
+# Journald logging
+docker run --log-driver journald myapp
+```
+
+#### Centralized Logging
+```yaml
+# ELK Stack example
+version: '3.8'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+  
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.14.0
+    depends_on:
+      - elasticsearch
+  
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.14.0
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+```
+
+---
+
+## Development Workflows
+
+### Development Environment Setup
+
+#### Hot Reloading
+```dockerfile
+# Development Dockerfile
+FROM node:16
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+CMD ["npm", "run", "dev"]
+```
+
+```yaml
+# docker-compose.dev.yml
+version: '3.8'
+services:
+  web:
+    build: .
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+```
+
+#### Multi-Stage Development
+```dockerfile
+# Base stage
+FROM node:16 AS base
+WORKDIR /app
+COPY package*.json ./
+
+# Development stage
+FROM base AS development
+RUN npm install
+COPY . .
+CMD ["npm", "run", "dev"]
+
+# Production stage
+FROM base AS production
+RUN npm ci --only=production
+COPY . .
+CMD ["npm", "start"]
+```
+
+### CI/CD Integration
+
+#### GitLab CI Example
+```yaml
+# .gitlab-ci.yml
+stages:
+  - build
+  - test
+  - deploy
+
+build:
+  stage: build
+  script:
+    - docker build -t myapp:$CI_COMMIT_SHA .
+    - docker push myapp:$CI_COMMIT_SHA
+
+test:
+  stage: test
+  script:
+    - docker run --rm myapp:$CI_COMMIT_SHA npm test
+
+deploy:
+  stage: deploy
+  script:
+    - docker service update --image myapp:$CI_COMMIT_SHA myapp_web
+```
+
+#### GitHub Actions Example
+```yaml
+# .github/workflows/docker.yml
+name: Docker Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Build Docker image
+      run: docker build -t myapp:${{ github.sha }} .
+    
+    - name: Run tests
+      run: docker run --rm myapp:${{ github.sha }} npm test
+    
+    - name: Deploy to production
+      run: |
+        docker tag myapp:${{ github.sha }} myapp:latest
+        docker push myapp:latest
+```
+
+---
+
+## Advanced Docker Features
+
+### Docker Buildx
+
+Multi-platform builds and advanced build features:
+
+```bash
+# Create builder instance
+docker buildx create --name mybuilder --use
+
+# Build for multiple platforms
+docker buildx build --platform linux/amd64,linux/arm64 -t myapp:latest .
+
+# Build with advanced features
+docker buildx build --target production --cache-from type=registry,ref=myapp:cache .
+```
+
+### Docker Scout
+
+Security analysis and recommendations:
+
+```bash
+# Analyze image for vulnerabilities
+docker scout quickview myapp:latest
+
+# Compare images
+docker scout compare myapp:v1.0 myapp:v2.0
+
+# View detailed recommendations
+docker scout recommendations myapp:latest
+```
+
+### Docker Extensions
+
+Extend Docker Desktop functionality:
+
+```bash
+# Install extensions
+docker extension install docker/disk-usage-extension
+
+# List installed extensions
+docker extension ls
+
+# Enable/disable extensions
+docker extension enable docker/disk-usage-extension
+```
+
+---
+
+## Troubleshooting Guide
+
+### Common Issues and Solutions
+
+#### Container Won't Start
+```bash
+# Check container logs
+docker logs mycontainer
+
+# Check container configuration
+docker inspect mycontainer
+
+# Run container interactively
+docker run -it myimage /bin/bash
+```
+
+#### Permission Issues
+```bash
+# Check file permissions
+docker run -it myimage ls -la /app
+
+# Fix ownership in Dockerfile
+RUN chown -R appuser:appuser /app
+USER appuser
+```
+
+#### Network Connectivity
+```bash
+# Test container networking
+docker exec mycontainer ping google.com
+
+# Check network configuration
+docker network inspect bridge
+
+# Test port connectivity
+docker exec mycontainer netstat -tlnp
+```
+
+#### Resource Issues
+```bash
+# Check system resources
+docker system df
+
+# Clean up unused resources
+docker system prune
+
+# Monitor resource usage
+docker stats
+```
+
+### Debugging Techniques
+
+#### Container Debugging
+```bash
+# Access running container
+docker exec -it mycontainer /bin/bash
+
+# Copy files from container
+docker cp mycontainer:/app/logs ./logs
+
+# Check container processes
+docker exec mycontainer ps aux
+```
+
+#### Build Debugging
+```bash
+# Build with verbose output
+docker build --progress=plain .
+
+# Debug build cache
+docker build --no-cache .
+
+# Build specific stage
+docker build --target development .
+```
+
+---
+
+## Performance Optimization
+
+### Build Performance
+
+#### Optimize Docker Context
+```dockerfile
+# Use .dockerignore
+.git
+node_modules
+*.log
+.env
+README.md
+```
+
+#### Parallel Builds
+```bash
+# Use BuildKit for parallel builds
+DOCKER_BUILDKIT=1 docker build .
+
+# Multi-stage parallel building
+docker build --target stage1 . &
+docker build --target stage2 . &
+wait
+```
+
+### Runtime Performance
+
+#### Resource Optimization
+```bash
+# Optimize container resources
+docker run --cpus="2" --memory="4g" --memory-swap="4g" myapp
+
+# Use resource constraints
+docker run --oom-kill-disable --memory="1g" myapp
+```
+
+#### Storage Optimization
+```bash
+# Use tmpfs for temporary data
+docker run --tmpfs /tmp:rw,noexec,nosuid,size=100m myapp
+
+# Optimize volume performance
+docker run -v myvolume:/data:rw,Z myapp
+```
+
+---
+
+## Essential Docker Commands Reference
+
+### Image Management
+
+```bash
+# List images
+docker images
+docker image ls
+
+# Pull image
+docker pull nginx:latest
+
+# Build image
+docker build -t myapp:latest .
+
+# Tag image
+docker tag myapp:latest myapp:v1.0
+
+# Push image
+docker push myapp:latest
+
+# Remove image
+docker rmi myapp:latest
+
+# Remove unused images
+docker image prune
+
+# Remove all images
+docker image prune -a
+
+# Save image to tar
+docker save myapp:latest > myapp.tar
+
+# Load image from tar
+docker load < myapp.tar
+
+# View image history
+docker history myapp:latest
+
+# Inspect image
+docker inspect myapp:latest
+```
+
+### Container Management
+
+```bash
+# List running containers
+docker ps
+
+# List all containers
+docker ps -a
+
+# Run container interactively
+docker run -it ubuntu /bin/bash
+
+# Run container in background
+docker run -d nginx
+
+# Run with port mapping
+docker run -p 8080:80 nginx
+
+# Run with volume
+docker run -v myvolume:/data nginx
+
+# Run with environment variables
+docker run -e NODE_ENV=production myapp
+
+# Start stopped container
+docker start mycontainer
+
+# Stop running container
+docker stop mycontainer
+
+# Restart container
+docker restart mycontainer
+
+# Remove container
+docker rm mycontainer
+
+# Remove all stopped containers
+docker container prune
+
+# Execute command in running container
+docker exec -it mycontainer /bin/bash
+
+# View container logs
+docker logs mycontainer
+
+# Follow log output
+docker logs -f mycontainer
+
+# Copy files to/from container
+docker cp file.txt mycontainer:/app/
+docker cp mycontainer:/app/file.txt ./
+
+# View container resource usage
+docker stats mycontainer
+
+# Inspect container
+docker inspect mycontainer
+```
+
+### Network Management
+
+```bash
+# List networks
+docker network ls
+
+# Create network
+docker network create mynetwork
+
+# Create network with options
+docker network create --driver bridge --subnet=192.168.1.0/24 mynetwork
+
+# Connect container to network
+docker network connect mynetwork mycontainer
+
+# Disconnect container from network
+docker network disconnect mynetwork mycontainer
+
+# Inspect network
+docker network inspect mynetwork
+
+# Remove network
+docker network rm mynetwork
+
+# Remove unused networks
+docker network prune
+```
+
+### Volume Management
+
+```bash
+# List volumes
+docker volume ls
+
+# Create volume
+docker volume create myvolume
+
+# Create volume with options
+docker volume create --driver local --opt type=tmpfs myvolume
+
+# Inspect volume
+docker volume inspect myvolume
+
+# Remove volume
+docker volume rm myvolume
+
+# Remove unused volumes
+docker volume prune
+
+# Mount volume in container
+docker run -v myvolume:/data nginx
+
+# Bind mount host directory
+docker run -v /host/path:/container/path nginx
+
+# Mount current directory
+docker run -v $(pwd):/app nginx
+```
+
+### System Management
+
+```bash
+# View system information
+docker system info
+
+# View disk usage
+docker system df
+
+# Clean up unused resources
+docker system prune
+
+# Clean up everything
+docker system prune -a
+
+# Clean up volumes too
+docker system prune -a --volumes
+
+# Monitor system events
+docker system events
+
+# View Docker version
+docker version
+
+# View Docker info
+docker info
+```
 
 ---
 
@@ -223,8 +1255,8 @@ Recipe (Dockerfile) ---> Image (Prepared Ingredients) ---> Container (Dish Ready
 
 When you run:
 
-```sh
-$ docker run hello-world
+```bash
+docker run hello-world
 ```
 
 - **Step 1:** Docker checks if the `hello-world` image exists locally.
@@ -252,14 +1284,14 @@ When you run a Docker command to start a container (e.g., `docker run hello-worl
 
 **Example Workflow:**
 1. First run:  
-    ```sh
-    $ docker run ubuntu
+    ```bash
+    docker run ubuntu
     ```
     - Docker downloads the `ubuntu` image if not present, then runs the container.
 
 2. Subsequent runs:  
-    ```sh
-    $ docker run ubuntu
+    ```bash
+    docker run ubuntu
     ```
     - Docker uses the cached `ubuntu` image, starting the container instantly.
 
@@ -283,160 +1315,7 @@ A Python app in a container might use a `python:3.11-slim` image, which includes
 
 This lightweight approach makes containers fast to start, efficient, and portable across environments.
 
-
 ---
-
-## Essential Docker Starter Commands
-
-Here are some fundamental Docker commands to help you get started:
-
-### Working with Images
-
-- **List local images:**
-    ```sh
-    docker images
-    ```
-- **Pull an image from Docker Hub:**
-    ```sh
-    docker pull <image-name>
-    ```
-- **Remove an image:**
-    ```sh
-    docker rmi <image-name>
-    ```
-
-### Working with Containers
-
-- **List running containers:**
-    ```sh
-    docker ps
-    ```
-- **List all containers (including stopped):**
-    ```sh
-    docker ps -a
-    ```
-- **Run a container interactively:**
-    ```sh
-    docker run -it <image-name> /bin/bash
-    ```
-- **Run a container in the background (detached mode):**
-    ```sh
-    docker run -d <image-name>
-    ```
-- **Stop a running container:**
-    ```sh
-    docker stop <container-id>
-    ```
-- **Remove a container:**
-    ```sh
-    docker rm <container-id>
-    ```
-
-### Building and Managing Images
-
-- **Build an image from a Dockerfile:**
-    ```sh
-    docker build -t <image-name> .
-    ```
-- **Tag an image:**
-    ```sh
-    docker tag <image-name> <repository>/<image-name>:<tag>
-    ```
-- **Push an image to Docker Hub:**
-    ```sh
-    docker push <repository>/<image-name>:<tag>
-    ```
-
-### Other Useful Commands
-
-- **View container logs:**
-    ```sh
-    docker logs <container-id>
-    ```
-- **Execute a command in a running container:**
-    ```sh
-    docker exec -it <container-id> /bin/bash
-    ```
-
-### Port Mapping and Exposing Services
-
-When running server applications (like Nginx, web servers, or APIs) in Docker containers, you often need to make them accessible from outside the container. This is done using **port mapping**.
-
-#### Example: Running Nginx with Port Mapping
-
-To run an Nginx server and map port 8080 on your host to port 80 inside the container:
-
-```sh
-docker run -d -p 8080:80 nginx
-```
-
-- `-p 8080:80` maps port 8080 on your host to port 80 in the container (where Nginx listens by default).
-- You can now access Nginx at `http://localhost:8080` on your host machine.
-
-#### General Syntax
-
-```sh
-docker run -p <host-port>:<container-port> <image-name>
-```
-
-- **Multiple Ports:** You can map multiple ports by repeating the `-p` flag.
-- **Custom Ports:** Adjust the host or container port as needed for your application.
-
-#### Common Use Cases
-
-- **Web servers:** Expose HTTP (80), HTTPS (443), or custom ports.
-- **APIs:** Map backend service ports for development or testing.
-- **Databases:** Expose database ports for local development (not recommended for production).
-
-**Tip:** For production, consider using Docker Compose or orchestration tools to manage complex port mappings and networking.
-
----
-
-## Understanding Docker Image Layers
-
-Docker images are built in layers, with each instruction in a Dockerfile (such as `RUN`, `COPY`, or `ADD`) creating a new, immutable layer on top of the previous one.
-
-- **Layered Filesystem:**  
-    Each layer represents a set of file changes (additions, modifications, deletions) and is stacked on top of the previous layers. The final image is the combination of all these layers.
-
-- **Layer Caching:**  
-    Docker caches layers locally. If a layer hasn't changed, Docker reuses it during builds, making subsequent builds much faster.
-
-- **Layer Sharing:**  
-    Layers are shared between images if they have common instructions. This saves disk space and reduces download times when pulling images.
-
-- **Read-Only Layers:**  
-    All image layers are read-only. When a container runs, Docker adds a thin, writable layer on top for changes made during the container's lifetime.
-
-**Example:**
-
-Given this Dockerfile:
-
-```dockerfile
-FROM python:3.11-slim
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-CMD ["python", "app.py"]
-```
-
-- Each line creates a new layer:
-    1. Base image (`FROM`)
-    2. Copying requirements (`COPY`)
-    3. Installing dependencies (`RUN`)
-    4. Copying app files (`COPY`)
-    5. Setting the default command (`CMD`)
-
-**Best Practices:**
-- Place frequently changing instructions (like `COPY . .`) near the end to maximize layer cache reuse.
-- Combine commands where possible to reduce the number of layers.
-
-**Benefits:**
-- Faster builds and deployments.
-- Efficient storage and bandwidth usage.
-- Simplified updates—only changed layers need to be rebuilt or downloaded.
-
---- 
 
 ## Example: Creating a Simple Dockerfile
 
@@ -455,7 +1334,7 @@ CMD echo "Hello World"
 - `CMD echo "Hello World"` specifies the command to run when the container starts.
 
 **Build and run the container:**
-```sh
+```bash
 docker build -t ubuntu-hello .
 docker run ubuntu-hello
 ```
@@ -466,3 +1345,214 @@ Hello World
 ```
 
 This demonstrates how to create a custom Docker image that performs setup steps and runs a command when started.
+
+---
+
+## Real-World Examples
+
+### Web Application Example
+
+**Dockerfile:**
+```dockerfile
+FROM node:16-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy application code
+COPY . .
+
+# Expose port
+EXPOSE 3000
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
+# Change ownership
+RUN chown -R nextjs:nodejs /app
+USER nextjs
+
+# Start application
+CMD ["npm", "start"]
+```
+
+**docker-compose.yml:**
+```yaml
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://user:password@db:5432/myapp
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_DB=myapp
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - web
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+### Microservices Example
+
+**API Service Dockerfile:**
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash app
+RUN chown -R app:app /app
+USER app
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+# Start application
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:create_app()"]
+```
+
+**docker-compose.yml for Microservices:**
+```yaml
+version: '3.8'
+
+services:
+  api:
+    build: ./api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/api
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - api
+    networks:
+      - frontend
+
+  db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_DB=api
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - api
+      - frontend
+    networks:
+      - frontend
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+```
+
+---
+
+## Conclusion
+
+Docker has revolutionized how we build, ship, and run applications by providing a consistent, portable, and efficient containerization platform. From simple single-container applications to complex microservices architectures, Docker provides the tools and ecosystem needed for modern software development and deployment.
+
+Key takeaways:
+- **Containers solve the "works on my machine" problem** by packaging applications with their dependencies
+- **Docker provides a complete ecosystem** for container management, from development to production
+- **Orchestration tools** like Docker Swarm and Kubernetes enable scalable, resilient applications
+- **Best practices** around security, performance, and optimization are crucial for production deployments
+- **Integration with CI/CD** pipelines streamlines development and deployment workflows
+
+Whether you're a developer looking to containerize your applications or a DevOps engineer managing production workloads, Docker provides the foundation for modern, cloud-native applications.
+
+---
+
+*This guide covers the essential concepts and practical knowledge needed to effectively use Docker in real-world scenarios. Continue exploring the Docker ecosystem and community resources to deepen your understanding and stay updated with the latest developments.*
