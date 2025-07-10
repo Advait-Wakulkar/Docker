@@ -437,3 +437,32 @@ CMD ["python", "app.py"]
 - Simplified updates—only changed layers need to be rebuilt or downloaded.
 
 --- 
+
+## Example: Creating a Simple Dockerfile
+
+Let's create a basic Dockerfile that uses Ubuntu, updates package lists, and prints "Hello World" when the container runs.
+
+**Dockerfile:**
+```dockerfile
+FROM ubuntu:latest
+RUN apt-get update
+CMD echo "Hello World"
+```
+
+**How it works:**
+- `FROM ubuntu:latest` sets the base image to Ubuntu.
+- `RUN apt-get update` updates the package lists inside the image.
+- `CMD echo "Hello World"` specifies the command to run when the container starts.
+
+**Build and run the container:**
+```sh
+docker build -t ubuntu-hello .
+docker run ubuntu-hello
+```
+
+**Expected output:**
+```
+Hello World
+```
+
+This demonstrates how to create a custom Docker image that performs setup steps and runs a command when started.
